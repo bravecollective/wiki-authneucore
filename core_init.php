@@ -1,6 +1,6 @@
 <?php
 require 'vendor/autoload.php';
-define(ROOT_DIR, __DIR__);
+define('ROOT_DIR', __DIR__);
 
 $bootstrap = new \Brave\CoreConnector\Bootstrap();
 /** @var \Brave\Sso\Basics\AuthenticationProvider $authenticationProvider */
