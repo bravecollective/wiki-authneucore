@@ -36,7 +36,7 @@ return [
         return new \Brave\NeucoreApi\Api\ApplicationApi(null, $configuration, null);
     },
 
-    PDO::class => function (\Psr\Container\ContainerInterface $container) {
+    PDO::class => function (\Pimple\Container $container) {
         $settings = $container['settings'];
         return new \PDO($settings['DB_URL'], $settings['DB_USER'], $settings['DB_PASS']);
     },
