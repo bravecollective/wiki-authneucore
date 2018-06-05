@@ -67,7 +67,7 @@ class auth_plugin_authneucore extends DokuWiki_Auth_Plugin
     public function __construct()
     {
         parent::__construct(); // for compatibility
-        require(__DIR__ . 'vendor/autoload.php');
+        require(__DIR__ . '/vendor/autoload.php');
         $this->bootstrap = new \Brave\CoreConnector\Bootstrap();
         $this->db = $this->bootstrap->getContainer()->get(\PDO::class);
 
