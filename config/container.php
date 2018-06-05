@@ -44,7 +44,7 @@ return [
     {
         $session_factory = new \Aura\Session\SessionFactory;
         $session = $session_factory->newInstance($_COOKIE);
-        $session->setName();
+        $session->setName('authneucore');
         return $session;
     }
 ];
