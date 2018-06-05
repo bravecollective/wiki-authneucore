@@ -3,9 +3,9 @@
 return [
     'settings' => require_once('config.php'),
 
-    \League\OAuth2\Client\Provider\GenericProvider::class => function (\Psr\Container\ContainerInterface $container)
+    \League\OAuth2\Client\Provider\GenericProvider::class => function (\Pimple\Container $container)
     {
-        $settings = $container->get('settings');
+        $settings = $container['settings'];
 
         return new \League\OAuth2\Client\Provider\GenericProvider([
             'clientId' => $settings['SSO_CLIENT_ID'],
@@ -17,30 +17,30 @@ return [
         ]);
     },
 
-    \Brave\Sso\Basics\AuthenticationProvider::class => function (\Psr\Container\ContainerInterface $container)
+    \Brave\Sso\Basics\AuthenticationProvider::class => function (\Pimple\Container $container)
     {
-        $settings = $container->get('settings');
+        $settings = $container['settings'];
 
         return new \Brave\Sso\Basics\AuthenticationProvider(
-            $container->get(\League\OAuth2\Client\Provider\GenericProvider::class),
+            $container[\League\OAuth2\Client\Provider\GenericProvider::class],
             explode(' ', $settings['SSO_SCOPES'])
         );
     },
 
-    \Brave\NeucoreApi\Api\ApplicationApi::class => function (\Psr\Container\ContainerInterface $container)
+    \Brave\NeucoreApi\Api\ApplicationApi::class => function (\Pimple\Container $container)
     {
-        $settings = $container->get('settings');
+        $settings = $container['settings'];
         $configuration = new \Brave\NeucoreApi\Configuration();
         $configuration = $configuration->setHost($settings['CORE_URL'])->setApiKey('Authorization', $settings['CORE_APP_TOKEN'])->setApiKeyPrefix('Authorization', 'Bearer');
         return new \Brave\NeucoreApi\Api\ApplicationApi(null, $configuration, null);
     },
 
     PDO::class => function (\Psr\Container\ContainerInterface $container) {
-        $settings = $container->get('settings');
-        return new \PDO($settings['DB_URL']);
+        $settings = $container['settings'];
+        return new \PDO($settings['DB_URL'], $settings['DB_USER'], $settings['DB_PASS']);
     },
 
-    \Aura\Session\Session::class => function (\Psr\Container\ContainerInterface $container)
+    \Aura\Session\Session::class => function (\Pimple\Container $container)
     {
         $session_factory = new \Aura\Session\SessionFactory;
         $session = $session_factory->newInstance($_COOKIE);
