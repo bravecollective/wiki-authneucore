@@ -123,7 +123,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/bravecollective/sso-basics.git",
-                "reference": "ac735536a673e81e00c0de028620f0d74e4b7675"
+                "reference": "3b7cce453803859720c25ea8fe8b7a091be41d77"
             },
             "require": {
                 "league/oauth2-client": "^2.2",
@@ -135,7 +135,7 @@
                     "Brave\\Sso\\Basics\\": "src"
                 }
             },
-            "time": "2018-06-02T09:56:41+00:00"
+            "time": "2018-06-05T17:36:18+00:00"
         },
         {
             "name": "guzzlehttp/guzzle",
