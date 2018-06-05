@@ -40,7 +40,7 @@ $corpname = '';
 $allianceid = 0;
 $alliancename = '';
 
-$groups = $applicationApi->corpGroupsV1($eveAuthentication->getCharacterId());
+$groups = $applicationApi->groupsV1($eveAuthentication->getCharacterId());
 $tags = array_map(function ($group) {
     /** \Brave\NeucoreApi\Model\Group $group */
     return $group->getName();
