@@ -18,7 +18,7 @@ class Bootstrap
      */
     public function __construct()
     {
-        $container = new \Pimple\Container(require_once(ROOT_DIR . '/config/container.php'));
+        $container = new \Pimple\Psr11\Container(new \Pimple\Container(require_once(ROOT_DIR . '/config/container.php')));
         $this->container = $container;
 
     }

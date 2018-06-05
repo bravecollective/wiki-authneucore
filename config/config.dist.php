@@ -19,5 +19,7 @@ return [
     'CORE_APP_TOKEN' => '',
 
     // DB
-    'DB_URL' => ''
+    'DB_URL' => '',
+    'DB_USER' => '',
+    'DB_PASS' => ''
 ];
