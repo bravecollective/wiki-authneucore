@@ -1,6 +1,6 @@
 <?php
 /**
- * DokuWiki Plugin authbrave (Auth Component)
+ * DokuWiki Plugin authneucore (Auth Component)
  *
  * @license MIT http://opensource.org/licenses/MIT
  * @author  kiu kiu@gmx.net
@@ -25,17 +25,13 @@ class auth_plugin_authneucore extends DokuWiki_Auth_Plugin
     private function getCookie()
     {
 
-        return preg_replace("/[^A-Za-z0-9]/", '', $_COOKIE['neucore-auth']);
+        return preg_replace("/[^A-Za-z0-9]/", '', $_COOKIE['authneucore']);
     }
 
     private function getUser()
     {
-
-        //	return false;
-
-        require('config.php');
         $stm = $this->db->prepare('DELETE FROM session WHERE created < :time;');
-        $stm->bindValue(':time', time() - $cfg_expire_session);
+        $stm->bindValue(':time', time() - 3600);
         if (!$stm->execute()) {
             die('cleanup session failed');
         };

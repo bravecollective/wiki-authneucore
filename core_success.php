@@ -50,12 +50,6 @@ $tags = array_map(function ($group) {
 
 $db = $bootstrap->getContainer()->get(\PDO::class);
 
-try {
-    $db = new PDO($cfg_sql_url, $cfg_sql_user, $cfg_sql_pass);
-} catch (PDOException $e) {
-    raiseError('auth database init failed');
-}
-
 // -----------------------------------------------
 
 function addGroup($db, $groups, $criteria) {
