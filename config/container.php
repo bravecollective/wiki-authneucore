@@ -31,7 +31,8 @@ return [
     {
         $settings = $container['settings'];
         $configuration = new \Brave\NeucoreApi\Configuration();
-        $configuration = $configuration->setHost($settings['CORE_URL'])->setApiKey('Authorization', $settings['CORE_APP_TOKEN'])->setApiKeyPrefix('Authorization', 'Bearer');
+        $token = base64_encode($settings['CORE_APP_ID'] . ':' . $settings['CORE_APP_TOKEN']);
+        $configuration = $configuration->setHost($settings['CORE_URL'])->setApiKey('Authorization', $token)->setApiKeyPrefix('Authorization', 'Bearer');
         return new \Brave\NeucoreApi\Api\ApplicationApi(null, $configuration, null);
     },
 
