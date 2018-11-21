@@ -38,7 +38,7 @@ return [
 
     PDO::class => function (\Pimple\Container $container) {
         $settings = $container['settings'];
-        return new \PDO($settings['DB_URL'], $settings['DB_USER'], $settings['DB_PASS']);
+        return new \PDO($settings['DB_URL']);
     },
 
     \Aura\Session\Session::class => function (\Pimple\Container $container)

@@ -143,7 +143,7 @@ class auth_plugin_authneucore extends DokuWiki_Auth_Plugin
      * @param   string $user the user name
      * @return  array containing user data or false
      */
-    public function getUserData($user)
+    public function getUserData($user, $requireGroups = true)
     {
         $stm = $this->db->prepare('SELECT * FROM user WHERE username = :username;');
         $stm->bindValue(':username', $user);
@@ -258,3 +258,4 @@ class auth_plugin_authneucore extends DokuWiki_Auth_Plugin
 }
 
 // vim:ts=4:sw=4:et:
+
