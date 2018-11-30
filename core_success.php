@@ -48,6 +48,7 @@ try {
             'Please register at <a href="https://account.bravecollective.com">BRAVE Core</a> first. ',
             'If groups are listed on the right, try again here.';
     }
+    exit;
 }
 $tags = array_map(function ($group) {
     /** \Brave\NeucoreApi\Model\Group $group */
