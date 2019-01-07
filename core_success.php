@@ -40,7 +40,16 @@ $corpname = '';
 $allianceid = 0;
 $alliancename = '';
 
-$groups = $applicationApi->groupsV1($eveAuthentication->getCharacterId());
+try {
+    $groups = $applicationApi->groupsV1($eveAuthentication->getCharacterId());
+} catch (\Brave\NeucoreApi\ApiException $e) {
+    if ($e->getCode() === 404) {
+        echo '<strong>Character not found.</strong><br>',
+            'Please register at <a href="https://account.bravecollective.com">BRAVE Core</a> first. ',
+            'If groups are listed on the right, try again here.';
+    }
+    exit;
+}
 $tags = array_map(function ($group) {
     /** \Brave\NeucoreApi\Model\Group $group */
     return $group->getName();
