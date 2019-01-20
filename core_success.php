@@ -11,7 +11,8 @@ $session = $bootstrap->getContainer()->get(\Aura\Session\Session::class);
 $sessionState = $session->getSegment('Bravecollective_Neucore')->get('sso_state');
 
 if (!isset($_GET['code']) || !isset($_GET['state'])) {
-    throw new \Exception('Invalid SSO state, please try again.');
+    echo 'Invalid SSO state, please try again.';
+    exit;
 }
 
 $code = $_GET['code'];
@@ -40,33 +41,62 @@ $corpname = '';
 $allianceid = 0;
 $alliancename = '';
 
-try {
-    $groups = $applicationApi->groupsV1($eveAuthentication->getCharacterId());
-} catch (\Brave\NeucoreApi\ApiException $e) {
-    if ($e->getCode() === 404) {
-        echo '<strong>Character not found.</strong><br>',
-            'Please register at <a href="https://account.bravecollective.com">BRAVE Core</a> first. ',
-            'If groups are listed on the right, try again here.';
+function getCoreGroups(
+    \Brave\NeucoreApi\Api\ApplicationApi $applicationApi,
+    \Brave\Sso\Basics\EveAuthentication $eveAuthentication
+) {
+    $charId = $eveAuthentication->getCharacterId();
+    $coreGroups = [];
+
+    // try player account
+    try {
+        $coreGroups = $applicationApi->groupsV2($charId);
+    } catch (\Brave\NeucoreApi\ApiException $e) {
+        // probably 404 Character not found
     }
+
+    // try alliance groups
+    if (count($coreGroups) === 0) {
+        $esiResult = file_get_contents('https://esi.evetech.net/latest/characters/' . $charId);
+        $charData = json_decode($esiResult);
+        if ($charData instanceof \stdClass) {
+            try {
+                $coreGroups = $applicationApi->allianceGroupsV2($charData->alliance_id);
+            } catch (\Brave\NeucoreApi\ApiException $e) {
+                // probably 404 Alliance not found
+            }
+        }
+    }
+
+    $tags = array_map(function (\Brave\NeucoreApi\Model\Group $group) {
+        return $group->getName();
+    }, $coreGroups);
+
+    return $tags;
+}
+
+$tags = getCoreGroups($applicationApi, $eveAuthentication);
+if (count($tags) === 0) {
+    echo '<strong>No groups found for this character or alliance.</strong><br><br>',
+        'Please register at <a href="https://account.bravecollective.com">BRAVE Core</a>. ',
+        'If groups are listed on the right, try again here.<br><br>' .
+        'If your alliance is a member of the Legacy Coalition, you should have access, maybe ESI is down?';
     exit;
 }
-$tags = array_map(function ($group) {
-    /** \Brave\NeucoreApi\Model\Group $group */
-    return $group->getName();
-}, $groups);
 
 // -----------------------------------------------
 
+/** @var $db \PDO  */
 $db = $bootstrap->getContainer()->get(\PDO::class);
 
 // -----------------------------------------------
 
-function addGroup($db, $groups, $criteria) {
+function addGroup(\PDO $db, $groups, $criteria) {
     $stm = $db->prepare('SELECT grp FROM grp WHERE criteria = :criteria;');
     $stm->bindValue(':criteria', $criteria);
     if (!$stm->execute()) { raiseError('group query failed'); };
     while($res = $stm->fetch()){
-	$groups[] = $res['grp'];
+        $groups[] = $res['grp'];
     }
     return $groups;
 }
@@ -82,12 +112,12 @@ $groups = array_unique($groups);
 
 // -----------------------------------------------
 
-function addBan($db, $banned, $criteria) {
+function addBan(\PDO $db, $banned, $criteria) {
     $stm = $db->prepare('SELECT id FROM ban WHERE criteria = :criteria;');
     $stm->bindValue(':criteria', $criteria);
     if (!$stm->execute()) { raiseError('ban query failed'); };
     if ($stm->fetch()) {
-	return true;
+        return true;
     }
     return $banned;
 }
@@ -142,4 +172,3 @@ if (!$stm->execute()) { raiseError('session insert failed'); };
 $cb = $session->getSegment('Bravecollective_Neucore')->get('cb');
 
 header("Location: " . $cfg_url_base . '/' . $cb);
-?>

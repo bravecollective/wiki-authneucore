@@ -20,6 +20,8 @@
     }
     ],
     "require": {
+        "ext-PDO": "*",
+        "ext-json": "*",
         "bravecollective/neucore-api": "*@dev",
         "bravecollective/sso-basics": "*@dev",
         "pimple/pimple": "3.2.*",
