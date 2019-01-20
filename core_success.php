@@ -61,7 +61,7 @@ function getCoreGroups(
         $charData = json_decode($esiResult);
         if ($charData instanceof \stdClass) {
             try {
-                $coreGroups = $applicationApi->allianceGroupsV2($charData->alliance_id);
+                $coreGroups = $applicationApi->allianceGroupsV2((int) $charData->alliance_id);
             } catch (\Brave\NeucoreApi\ApiException $e) {
                 // probably 404 Alliance not found
             }
