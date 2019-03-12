@@ -23,7 +23,7 @@
         "ext-PDO": "*",
         "ext-json": "*",
         "bravecollective/neucore-api": "*@dev",
-        "bravecollective/sso-basics": "*@dev",
+        "bravecollective/sso-basics": "^1.0.0",
         "pimple/pimple": "3.2.*",
         "aura/session": "^2.1"
     }
