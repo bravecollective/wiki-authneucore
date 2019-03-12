@@ -19,7 +19,13 @@ $code = $_GET['code'];
 $state = $_GET['state'];
 
 $authenticationProvider = $bootstrap->getContainer()->get(\Brave\Sso\Basics\AuthenticationProvider::class);
-$eveAuthentication = $authenticationProvider->validateAuthentication($state, $sessionState, $code);
+try {
+    $eveAuthentication = $authenticationProvider->validateAuthentication($state, $sessionState, $code);
+} catch(\UnexpectedValueException $uve) {
+    echo $uve->getMessage(), '<br>',
+        '<a href="https://wiki.bravecollective.com/">Please try again.</a>';
+    exit;
+}
 
 $session->getSegment('Bravecollective_Neucore')->set('eveAuth', $eveAuthentication);
 
