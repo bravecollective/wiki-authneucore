@@ -86,7 +86,8 @@ if (count($tags) === 0) {
     echo '<strong>No groups found for this character or alliance.</strong><br><br>',
         'Please register at <a href="https://account.bravecollective.com">BRAVE Core</a>. ',
         'If groups are listed on the right, try again here.<br><br>' .
-        'If your alliance is a member of the Legacy Coalition, you should have access, maybe ESI is down?';
+        'If your alliance is a member of the Legacy Coalition, you should have access, maybe ESI is down?<br><br>'.
+        '<a href="/start?do=login">Back to Login</a>';
     exit;
 }
 
