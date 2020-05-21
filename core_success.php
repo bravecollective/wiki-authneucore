@@ -178,4 +178,4 @@ if (!$stm->execute()) { raiseError('session insert failed'); };
 
 $cb = $session->getSegment('Bravecollective_Neucore')->get('cb');
 
-header("Location: " . $cfg_url_base . '/' . $cb);
+header("Location: " . '/' . $cb);
