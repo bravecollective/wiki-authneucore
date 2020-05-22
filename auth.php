@@ -22,9 +22,9 @@ class auth_plugin_authneucore extends DokuWiki_Auth_Plugin
      */
     private $bootstrap;
 
-    private function getCookie()
+    private function getSessionId()
     {
-
+        // Return session ID from the previous session (from core_init.php and core_success.php).
         return preg_replace("/[^A-Za-z0-9]/", '', $_COOKIE['authneucore']);
     }
 
@@ -37,7 +37,7 @@ class auth_plugin_authneucore extends DokuWiki_Auth_Plugin
         };
 
         $stm = $this->db->prepare('SELECT charid FROM session WHERE sessionid = :sessionid;');
-        $stm->bindValue(':sessionid', $this->getCookie());
+        $stm->bindValue(':sessionid', $this->getSessionId());
         if (!$stm->execute()) {
             die('find session failed');
         };
@@ -57,6 +57,16 @@ class auth_plugin_authneucore extends DokuWiki_Auth_Plugin
         if (!$row) {
             return false;
         }
+
+        // refresh session time in database
+        $stm = $this->db->prepare('UPDATE session SET created = :created WHERE sessionid = :sessionid');
+        $stm->bindValue(':created', time());
+        $stm->bindValue(':sessionid', $this->getSessionId());
+        $stm->execute();
+
+        // refresh session file time so that the Ubuntu cron job does not delete it
+        // after "session.gc_maxlifetime" seconds
+        $_SESSION[DOKU_COOKIE]['auth']['_last_access'] = time();
 
         return $row;
     }
@@ -95,7 +105,7 @@ class auth_plugin_authneucore extends DokuWiki_Auth_Plugin
     public function logOff()
     {
         $stm = $this->db->prepare('DELETE FROM session WHERE sessionid = :sessionid;');
-        $stm->bindValue(':sessionid', $this->getCookie());
+        $stm->bindValue(':sessionid', $this->getSessionId());
         if (!$stm->execute()) {
             die('logoff failed');
         };
