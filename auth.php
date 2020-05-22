@@ -31,7 +31,7 @@ class auth_plugin_authneucore extends DokuWiki_Auth_Plugin
     private function getUser()
     {
         $stm = $this->db->prepare('DELETE FROM session WHERE created < :time;');
-        $stm->bindValue(':time', time() - 3600);
+        $stm->bindValue(':time', time() - 28800); // 8 hours
         if (!$stm->execute()) {
             die('cleanup session failed');
         };
