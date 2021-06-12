@@ -20,16 +20,22 @@ class action_plugin_authneucore extends DokuWiki_Action_Plugin
         global $ID;
         global $conf;
         if ($conf['authtype'] != 'authneucore') {
-		return;
-	}
+		    return;
+        }
 
-	$button = '<button type="submit"><img src="https://raw.githubusercontent.com/bravecollective/web-ui/master/dist/images/EVE_SSO_Login_Buttons_Large_Black.png" /></button>';
+        $config = include __DIR__ . '/config/config.php';
 
-	$pos = $event->data->findElementByAttribute('type', 'submit');
+        $loginButtonUrl = 'https://raw.githubusercontent.com/bravecollective/web-ui/master/dist/images/EVE_SSO_Login_Buttons_Large_Black.png';
+        $button = '<button type="submit"><img src="'.$loginButtonUrl.'" /></button>';
 
-	$event->data->replaceElement($pos-1, $button);
+        $pos = $event->data->findElementByAttribute('type', 'submit');
+
+        $event->data->replaceElement($pos-1, $button);
 
         $event->data = new Doku_Form(array());
-        $event->data->addElement('<a href="https://wiki.bravecollective.com/lib/plugins/authneucore/core_init.php?cb='. ltrim($_SERVER['REQUEST_URI'], '/') . '"><img src="https://raw.githubusercontent.com/bravecollective/web-ui/master/dist/images/EVE_SSO_Login_Buttons_Large_Black.png"></a>');
+        $event->data->addElement(
+            '<a href="'.$config['wiki.baseUrl'].'lib/plugins/authneucore/core_init.php?cb=' .
+            ltrim($_SERVER['REQUEST_URI'], '/') . '"><img src="'.$loginButtonUrl.'"></a>'
+        );
     }
 }

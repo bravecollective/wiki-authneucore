@@ -12,9 +12,10 @@ return [
 
     // App
     'brave.serviceName' => 'Add your service name here',
+    'wiki.baseUrl' => 'https://wiki.bravecollective.com/',
 
     // NEUCORE
-    'CORE_URL' => 'https://account.bravecollective.com/api',
+    'CORE_URL' => 'https://account.bravecollective.com',
     'CORE_APP_ID' => '',
     'CORE_APP_TOKEN' => '',
 

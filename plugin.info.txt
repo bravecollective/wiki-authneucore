@@ -4,4 +4,4 @@ email  yukiko.kami.san@gmail.com
 date   2018-06-04
 name   authneucore plugin
 desc   Authentication plugin for using BRAVE Collective neucore
-url    http://github.com/bravecollective/neucore-wiki-connector
+url    https://github.com/bravecollective/authneucore
