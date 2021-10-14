@@ -2,7 +2,7 @@
 
 use Aura\Session\Session;
 use Brave\CoreConnector\Bootstrap;
-use Brave\Sso\Basics\AuthenticationProvider;
+use Eve\Sso\AuthenticationProvider;
 
 require 'vendor/autoload.php';
 const ROOT_DIR = __DIR__;

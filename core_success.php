@@ -3,15 +3,13 @@
 use Aura\Session\Session;
 use Brave\CoreConnector\Bootstrap;
 use Brave\CoreConnector\Helper;
-use Brave\NeucoreApi\Api\ApplicationApi;
-use Brave\Sso\Basics\AuthenticationProvider;
+use Brave\NeucoreApi\Api\ApplicationGroupsApi;
+use Eve\Sso\AuthenticationProvider;
 
 require 'vendor/autoload.php';
 const ROOT_DIR = __DIR__;
 
 $bootstrap = new Bootstrap();
-/** @var AuthenticationProvider $authenticationProvider */
-$authenticationProvider = $bootstrap->getContainer()->get(AuthenticationProvider::class);
 
 /** @var Session $session */
 $session = $bootstrap->getContainer()->get(Session::class);
@@ -27,6 +25,7 @@ if (!isset($_GET['code']) || !isset($_GET['state'])) {
 $code = $_GET['code'];
 $state = $_GET['state'];
 
+/** @var AuthenticationProvider $authenticationProvider */
 $authenticationProvider = $bootstrap->getContainer()->get(AuthenticationProvider::class);
 try {
     $eveAuthentication = $authenticationProvider->validateAuthentication($state, $sessionState, $code);
@@ -38,8 +37,8 @@ try {
 
 $session->getSegment('Bravecollective_Neucore')->set('eveAuth', $eveAuthentication);
 
-/** @var ApplicationApi $applicationApi */
-$applicationApi = $bootstrap->getContainer()->get(ApplicationApi::class);
+/** @var ApplicationGroupsApi $groupApi */
+$groupApi = $bootstrap->getContainer()->get(ApplicationGroupsApi::class);
 
 // -----------------------------------------------
 
@@ -56,7 +55,7 @@ $corpname = '';
 $allianceid = 0;
 $alliancename = '';
 
-$tags = $helper->getCoreGroups($applicationApi, $eveAuthentication);
+$tags = $helper->getCoreGroups($groupApi, $eveAuthentication);
 if (count($tags) === 0) {
     echo '<strong>No groups found for this character or alliance.</strong><br><br>',
         'Please register at <a href="'.$bootstrap->getContainer()->get('settings')['CORE_URL'].'">BRAVE Core</a>. ',

@@ -5,28 +5,14 @@
             "Brave\\CoreConnector\\": "src"
         }
     },
-    "repositories": [
-        {
-            "type": "git",
-            "url": "https://github.com/bravecollective/neucore-api.git"
-        },
-        {
-            "type": "git",
-            "url": "https://github.com/bravecollective/sso-basics.git"
-        },
-        {
-            "type": "git",
-            "url": "https://github.com/bravecollective/web-ui.git"
-        }
-    ],
     "require": {
         "php": "^7.2",
         "ext-PDO": "*",
         "ext-json": "*",
         "aura/session": "^2.1",
-        "bravecollective/neucore-api": "*@dev",
-        "bravecollective/sso-basics": "^1.0.0",
-        "pimple/pimple": "3.2.*"
+        "bravecollective/neucore-api": "^1.23",
+        "pimple/pimple": "3.2.*",
+        "tkhamez/eve-sso": "^1.0"
     },
     "config": {
         "platform": {

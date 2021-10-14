@@ -2,22 +2,22 @@
 
 namespace Brave\CoreConnector;
 
-use Brave\NeucoreApi\Api\ApplicationApi;
+use Brave\NeucoreApi\Api\ApplicationGroupsApi;
 use Brave\NeucoreApi\ApiException;
 use Brave\NeucoreApi\Model\Group;
-use Brave\Sso\Basics\EveAuthentication;
+use Eve\Sso\EveAuthentication;
 use PDO;
 use stdClass;
 
 class Helper
 {
-    public function getCoreGroups(ApplicationApi $applicationApi, EveAuthentication $eveAuthentication): array
+    public function getCoreGroups(ApplicationGroupsApi $groupApi, EveAuthentication $eveAuthentication): array
     {
         $charId = $eveAuthentication->getCharacterId();
 
         // try player account
         try {
-            $coreGroups = $applicationApi->groupsV2($charId);
+            $coreGroups = $groupApi->groupsV2($charId);
         } catch (ApiException $e) {
             // probably 404 Character not found
             error_log($e->getMessage());
@@ -30,7 +30,7 @@ class Helper
             $charData = json_decode($esiResult);
             if ($charData instanceof stdClass) {
                 try {
-                    $coreGroups = $applicationApi->allianceGroupsV2((int) $charData->alliance_id);
+                    $coreGroups = $groupApi->allianceGroupsV2((int) $charData->alliance_id);
                 } catch (ApiException $e) {
                     // probably 404 Alliance not found
                     error_log($e->getMessage());

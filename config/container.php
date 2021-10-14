@@ -2,9 +2,9 @@
 
 use Aura\Session\Session;
 use Aura\Session\SessionFactory;
-use Brave\NeucoreApi\Api\ApplicationApi;
+use Brave\NeucoreApi\Api\ApplicationGroupsApi;
 use Brave\NeucoreApi\Configuration;
-use Brave\Sso\Basics\AuthenticationProvider;
+use Eve\Sso\AuthenticationProvider;
 use League\OAuth2\Client\Provider\GenericProvider;
 use Pimple\Container;
 
@@ -33,15 +33,14 @@ return [
         );
     },
 
-    ApplicationApi::class => function (Container $container) {
+    ApplicationGroupsApi::class => function (Container $container) {
         $settings = $container['settings'];
         $configuration = new Configuration();
         $token = base64_encode($settings['CORE_APP_ID'] . ':' . $settings['CORE_APP_TOKEN']);
         $configuration = $configuration
             ->setHost($settings['CORE_URL'].'/api')
-            ->setApiKey('Authorization', $token)
-            ->setApiKeyPrefix('Authorization', 'Bearer');
-        return new ApplicationApi(null, $configuration, null);
+            ->setAccessToken( $token);
+        return new ApplicationGroupsApi(null, $configuration, null);
     },
 
     PDO::class => function (Container $container) {
