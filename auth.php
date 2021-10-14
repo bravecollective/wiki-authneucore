@@ -79,7 +79,7 @@ class auth_plugin_authneucore extends DokuWiki_Auth_Plugin
     {
         define('ROOT_DIR', __DIR__);
         parent::__construct(); // for compatibility
-        require(__DIR__ . '/vendor/autoload.php');
+        require ROOT_DIR . '/vendor/autoload.php';
         $this->bootstrap = new Bootstrap();
         $this->db = $this->bootstrap->getContainer()->get(PDO::class);
 

@@ -2,13 +2,11 @@
 
 use Aura\Session\Session;
 use Brave\CoreConnector\Bootstrap;
+use Brave\CoreConnector\Helper;
 use Brave\NeucoreApi\Api\ApplicationApi;
-use Brave\NeucoreApi\ApiException;
-use Brave\NeucoreApi\Model\Group;
 use Brave\Sso\Basics\AuthenticationProvider;
-use Brave\Sso\Basics\EveAuthentication;
 
-require('vendor/autoload.php');
+require 'vendor/autoload.php';
 const ROOT_DIR = __DIR__;
 
 $bootstrap = new Bootstrap();
@@ -18,6 +16,8 @@ $authenticationProvider = $bootstrap->getContainer()->get(AuthenticationProvider
 /** @var Session $session */
 $session = $bootstrap->getContainer()->get(Session::class);
 $sessionState = $session->getSegment('Bravecollective_Neucore')->get('sso_state');
+
+$helper = new Helper();
 
 if (!isset($_GET['code']) || !isset($_GET['state'])) {
     echo 'Invalid SSO state, please try again.';
@@ -56,42 +56,7 @@ $corpname = '';
 $allianceid = 0;
 $alliancename = '';
 
-function getCoreGroups(
-    ApplicationApi $applicationApi,
-    EveAuthentication $eveAuthentication
-): array {
-    $charId = $eveAuthentication->getCharacterId();
-
-    // try player account
-    try {
-        $coreGroups = $applicationApi->groupsV2($charId);
-    } catch (ApiException $e) {
-        // probably 404 Character not found
-        error_log($e->getMessage());
-        return [];
-    }
-
-    // try alliance groups
-    if (count($coreGroups) === 0) {
-        $esiResult = file_get_contents('https://esi.evetech.net/latest/characters/' . $charId);
-        $charData = json_decode($esiResult);
-        if ($charData instanceof stdClass) {
-            try {
-                $coreGroups = $applicationApi->allianceGroupsV2((int) $charData->alliance_id);
-            } catch (ApiException $e) {
-                // probably 404 Alliance not found
-                error_log($e->getMessage());
-                return [];
-            }
-        }
-    }
-
-    return array_map(function (Group $group) {
-        return $group->getName();
-    }, $coreGroups);
-}
-
-$tags = getCoreGroups($applicationApi, $eveAuthentication);
+$tags = $helper->getCoreGroups($applicationApi, $eveAuthentication);
 if (count($tags) === 0) {
     echo '<strong>No groups found for this character or alliance.</strong><br><br>',
         'Please register at <a href="'.$bootstrap->getContainer()->get('settings')['CORE_URL'].'">BRAVE Core</a>. ',
@@ -108,49 +73,23 @@ $db = $bootstrap->getContainer()->get(PDO::class);
 
 // -----------------------------------------------
 
-function addGroup(PDO $db, $groups, $criteria): array {
-    $stm = $db->prepare('SELECT grp FROM grp WHERE criteria = :criteria;');
-    $stm->bindValue(':criteria', $criteria);
-    if (!$stm->execute()) {
-        error_log('group query failed');
-        return [];
-    }
-    while ($res = $stm->fetch()){
-        $groups[] = $res['grp'];
-    }
-    return $groups;
-}
-
 $groups = array('user');
-$groups = addGroup($db, $groups, 'charid_' . $charid);
+$groups = $helper->addGroup($db, $groups, 'charid_' . $charid);
 //$groups = addGroup($db, $groups, 'corpid_' . $corpid);
 //$groups = addGroup($db, $groups, 'allianceid_' . $allianceid);
 foreach ($tags as $tkey => $tvalue) {
-    $groups = addGroup($db, $groups, 'tag_' . $tvalue);
+    $groups = $helper->addGroup($db, $groups, 'tag_' . $tvalue);
 }
 $groups = array_unique($groups);
 
 // -----------------------------------------------
 
-function addBan(PDO $db, $banned, $criteria): bool {
-    $stm = $db->prepare('SELECT id FROM ban WHERE criteria = :criteria;');
-    $stm->bindValue(':criteria', $criteria);
-    if (!$stm->execute()) {
-        error_log('ban query failed');
-        return $banned;
-    }
-    if ($stm->fetch()) {
-        return true;
-    }
-    return $banned;
-}
-
 $banned = false;
-$banned = addBan($db, $banned, 'charid_' . $charid);
+$banned = $helper->addBan($db, $banned, 'charid_' . $charid);
 //$banned = addBan($db, $banned, 'corpid_' . $corpid);
 //$banned = addBan($db, $banned, 'allianceid_' . $allianceid);
 foreach ($tags as $tkey => $tvalue) {
-    $banned = addBan($db, $banned, 'tag_' . $tvalue);
+    $banned = $helper->addBan($db, $banned, 'tag_' . $tvalue);
 }
 
 if ($banned) {
