@@ -8,17 +8,18 @@
  */
 
 // must be run within Dokuwiki
+use Brave\CoreConnector\Bootstrap;
+
 if (!defined('DOKU_INC')) {
     die();
 }
 
 class auth_plugin_authneucore extends DokuWiki_Auth_Plugin
 {
-
-    private $db = null;
+    private $db;
 
     /**
-     * @var \Brave\CoreConnector\Bootstrap
+     * @var Bootstrap
      */
     private $bootstrap;
 
@@ -34,13 +35,13 @@ class auth_plugin_authneucore extends DokuWiki_Auth_Plugin
         $stm->bindValue(':time', time() - 28800); // 8 hours
         if (!$stm->execute()) {
             die('cleanup session failed');
-        };
+        }
 
         $stm = $this->db->prepare('SELECT charid FROM session WHERE sessionid = :sessionid;');
         $stm->bindValue(':sessionid', $this->getSessionId());
         if (!$stm->execute()) {
             die('find session failed');
-        };
+        }
 
         $row = $stm->fetch();
         if (!$row) {
@@ -51,7 +52,7 @@ class auth_plugin_authneucore extends DokuWiki_Auth_Plugin
         $stm->bindValue(':charid', $row['charid']);
         if (!$stm->execute()) {
             die('find user failed');
-        };
+        }
 
         $row = $stm->fetch();
         if (!$row) {
@@ -79,14 +80,15 @@ class auth_plugin_authneucore extends DokuWiki_Auth_Plugin
         define('ROOT_DIR', __DIR__);
         parent::__construct(); // for compatibility
         require(__DIR__ . '/vendor/autoload.php');
-        $this->bootstrap = new \Brave\CoreConnector\Bootstrap();
-        $this->db = $this->bootstrap->getContainer()->get(\PDO::class);
+        $this->bootstrap = new Bootstrap();
+        $this->db = $this->bootstrap->getContainer()->get(PDO::class);
 
         $this->cando['external'] = true; // does the module do external auth checking?
         $this->cando['logout'] = true; // can the user logout again? (eg. not possible with HTTP auth)
 
         // Even though it is possible to store and edit the mail address through this plugin
-        // it is considered a security risk as a user could subscribe to a namespace and continue to receive change notifications even though his core account has been revoked.
+        // it is considered a security risk as a user could subscribe to a namespace and continue to
+        // receive change notifications even though his core account has been revoked.
         $this->cando['modMail'] = false; // can emails be changed?
 
         $this->cando['addUser'] = false; // can Users be created?
@@ -108,7 +110,7 @@ class auth_plugin_authneucore extends DokuWiki_Auth_Plugin
         $stm->bindValue(':sessionid', $this->getSessionId());
         if (!$stm->execute()) {
             die('logoff failed');
-        };
+        }
     }
 
     /**
@@ -119,7 +121,7 @@ class auth_plugin_authneucore extends DokuWiki_Auth_Plugin
      * @param   bool $sticky Cookie should not expire
      * @return  bool             true on successful auth
      */
-    public function trustExternal($user, $pass, $sticky = false)
+    public function trustExternal($user, $pass, $sticky = false): bool
     {
         global $USERINFO;
 
@@ -151,7 +153,7 @@ class auth_plugin_authneucore extends DokuWiki_Auth_Plugin
      * grps array   list of groups the user is in
      *
      * @param   string $user the user name
-     * @return  array containing user data or false
+     * @return  array|false containing user data or false
      */
     public function getUserData($user, $requireGroups = true)
     {
@@ -159,7 +161,7 @@ class auth_plugin_authneucore extends DokuWiki_Auth_Plugin
         $stm->bindValue(':username', $user);
         if (!$stm->execute()) {
             die('user search failed');
-        };
+        }
 
         $row = $stm->fetch();
         if (!$row) {
@@ -178,7 +180,7 @@ class auth_plugin_authneucore extends DokuWiki_Auth_Plugin
      * @param   array $changes array of field/value pairs to be changed (password will be clear text)
      * @return  bool
      */
-    public function modifyUser($user, $changes)
+    public function modifyUser($user, $changes): bool
     {
         // $stm = $this->db->prepare('UPDATE user SET mail = :mail WHERE username = :username;');
         // $stm->bindValue(':username', $user);
@@ -196,7 +198,7 @@ class auth_plugin_authneucore extends DokuWiki_Auth_Plugin
      *
      * @return bool
      */
-    public function isCaseSensitive()
+    public function isCaseSensitive(): bool
     {
         return true;
     }
@@ -213,7 +215,7 @@ class auth_plugin_authneucore extends DokuWiki_Auth_Plugin
      * @param string $user username
      * @return string the cleaned username
      */
-    public function cleanUser($user)
+    public function cleanUser($user): string
     {
         return preg_replace("/[^A-Za-z0-9]/", '_', $user);
     }
@@ -232,7 +234,7 @@ class auth_plugin_authneucore extends DokuWiki_Auth_Plugin
      * @param  string $group groupname
      * @return string the cleaned groupname
      */
-    public function cleanGroup($group)
+    public function cleanGroup($group): string
     {
         return preg_replace("/[^A-Za-z0-9]/", '_', $group);
     }
@@ -261,11 +263,8 @@ class auth_plugin_authneucore extends DokuWiki_Auth_Plugin
      * @param  string $user - The username
      * @return bool
      */
-    public function useSessionCache($user)
+    public function useSessionCache($user): bool
     {
         return false;
     }
 }
-
-// vim:ts=4:sw=4:et:
-

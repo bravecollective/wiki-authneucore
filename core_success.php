@@ -1,13 +1,22 @@
 <?php
+
+use Aura\Session\Session;
+use Brave\CoreConnector\Bootstrap;
+use Brave\NeucoreApi\Api\ApplicationApi;
+use Brave\NeucoreApi\ApiException;
+use Brave\NeucoreApi\Model\Group;
+use Brave\Sso\Basics\AuthenticationProvider;
+use Brave\Sso\Basics\EveAuthentication;
+
 require('vendor/autoload.php');
-define('ROOT_DIR', __DIR__);
+const ROOT_DIR = __DIR__;
 
-$bootstrap = new \Brave\CoreConnector\Bootstrap();
-/** @var \Brave\Sso\Basics\AuthenticationProvider $authenticationProvider */
-$authenticationProvider = $bootstrap->getContainer()->get(\Brave\Sso\Basics\AuthenticationProvider::class);
+$bootstrap = new Bootstrap();
+/** @var AuthenticationProvider $authenticationProvider */
+$authenticationProvider = $bootstrap->getContainer()->get(AuthenticationProvider::class);
 
-/** @var \Aura\Session\Session $session */
-$session = $bootstrap->getContainer()->get(\Aura\Session\Session::class);
+/** @var Session $session */
+$session = $bootstrap->getContainer()->get(Session::class);
 $sessionState = $session->getSegment('Bravecollective_Neucore')->get('sso_state');
 
 if (!isset($_GET['code']) || !isset($_GET['state'])) {
@@ -18,10 +27,10 @@ if (!isset($_GET['code']) || !isset($_GET['state'])) {
 $code = $_GET['code'];
 $state = $_GET['state'];
 
-$authenticationProvider = $bootstrap->getContainer()->get(\Brave\Sso\Basics\AuthenticationProvider::class);
+$authenticationProvider = $bootstrap->getContainer()->get(AuthenticationProvider::class);
 try {
     $eveAuthentication = $authenticationProvider->validateAuthentication($state, $sessionState, $code);
-} catch(\UnexpectedValueException $uve) {
+} catch(UnexpectedValueException $uve) {
     echo $uve->getMessage(), '<br>',
         '<a href="/">Please try again.</a>';
     exit;
@@ -29,8 +38,8 @@ try {
 
 $session->getSegment('Bravecollective_Neucore')->set('eveAuth', $eveAuthentication);
 
-/** @var \Brave\NeucoreApi\Api\ApplicationApi $applicationApi */
-$applicationApi = $bootstrap->getContainer()->get(\Brave\NeucoreApi\Api\ApplicationApi::class);
+/** @var ApplicationApi $applicationApi */
+$applicationApi = $bootstrap->getContainer()->get(ApplicationApi::class);
 
 // -----------------------------------------------
 
@@ -48,37 +57,38 @@ $allianceid = 0;
 $alliancename = '';
 
 function getCoreGroups(
-    \Brave\NeucoreApi\Api\ApplicationApi $applicationApi,
-    \Brave\Sso\Basics\EveAuthentication $eveAuthentication
-) {
+    ApplicationApi $applicationApi,
+    EveAuthentication $eveAuthentication
+): array {
     $charId = $eveAuthentication->getCharacterId();
-    $coreGroups = [];
 
     // try player account
     try {
         $coreGroups = $applicationApi->groupsV2($charId);
-    } catch (\Brave\NeucoreApi\ApiException $e) {
+    } catch (ApiException $e) {
         // probably 404 Character not found
+        error_log($e->getMessage());
+        return [];
     }
 
     // try alliance groups
     if (count($coreGroups) === 0) {
         $esiResult = file_get_contents('https://esi.evetech.net/latest/characters/' . $charId);
         $charData = json_decode($esiResult);
-        if ($charData instanceof \stdClass) {
+        if ($charData instanceof stdClass) {
             try {
                 $coreGroups = $applicationApi->allianceGroupsV2((int) $charData->alliance_id);
-            } catch (\Brave\NeucoreApi\ApiException $e) {
+            } catch (ApiException $e) {
                 // probably 404 Alliance not found
+                error_log($e->getMessage());
+                return [];
             }
         }
     }
 
-    $tags = array_map(function (\Brave\NeucoreApi\Model\Group $group) {
+    return array_map(function (Group $group) {
         return $group->getName();
     }, $coreGroups);
-
-    return $tags;
 }
 
 $tags = getCoreGroups($applicationApi, $eveAuthentication);
@@ -93,16 +103,19 @@ if (count($tags) === 0) {
 
 // -----------------------------------------------
 
-/** @var $db \PDO  */
-$db = $bootstrap->getContainer()->get(\PDO::class);
+/** @var $db PDO */
+$db = $bootstrap->getContainer()->get(PDO::class);
 
 // -----------------------------------------------
 
-function addGroup(\PDO $db, $groups, $criteria) {
+function addGroup(PDO $db, $groups, $criteria): array {
     $stm = $db->prepare('SELECT grp FROM grp WHERE criteria = :criteria;');
     $stm->bindValue(':criteria', $criteria);
-    if (!$stm->execute()) { raiseError('group query failed'); };
-    while($res = $stm->fetch()){
+    if (!$stm->execute()) {
+        error_log('group query failed');
+        return [];
+    }
+    while ($res = $stm->fetch()){
         $groups[] = $res['grp'];
     }
     return $groups;
@@ -119,10 +132,13 @@ $groups = array_unique($groups);
 
 // -----------------------------------------------
 
-function addBan(\PDO $db, $banned, $criteria) {
+function addBan(PDO $db, $banned, $criteria): bool {
     $stm = $db->prepare('SELECT id FROM ban WHERE criteria = :criteria;');
     $stm->bindValue(':criteria', $criteria);
-    if (!$stm->execute()) { raiseError('ban query failed'); };
+    if (!$stm->execute()) {
+        error_log('ban query failed');
+        return $banned;
+    }
     if ($stm->fetch()) {
         return true;
     }
@@ -143,36 +159,60 @@ if ($banned) {
 
 // -----------------------------------------------
 
-$stm = $db->prepare('SELECT charid FROM user where charid = :charid;');
+$stm = $db->prepare('SELECT charid FROM user WHERE charid = :charid;');
 $stm->bindValue(':charid', $charid);
-if (!$stm->execute()) { raiseError('user query failed'); };
+if (!$stm->execute()) {
+    error_log('user query failed');
+    exit;
+}
 
 if ($stm->fetch()) {
-    $stm = $db->prepare('UPDATE user SET username = :username, groups = :groups, charname = :charname, corpid = :corpid, corpname = :corpname, allianceid = :allianceid, alliancename = :alliancename, authtoken = :authtoken, authlast = :now WHERE charid = :charid;');
+    $stm = $db->prepare(
+        'UPDATE user SET 
+            username = :username, groups = :groups, charname = :charname, corpid = :corpid, 
+            corpname = :corpname, allianceid = :allianceid, alliancename = :alliancename, 
+            authtoken = :authtoken, authlast = :now 
+        WHERE charid = :charid;'
+    );
 } else {
-    $stm = $db->prepare('INSERT INTO user (username, groups, charid, charname, corpid, corpname, allianceid, alliancename, authtoken, authcreated, authlast) VALUES (:username, :groups, :charid, :charname, :corpid, :corpname, :allianceid, :alliancename, :authtoken, :now, :now);');
+    $stm = $db->prepare(
+        'INSERT INTO user 
+            (username, groups, charid, charname, corpid, corpname, allianceid, alliancename, 
+             authtoken, authcreated, authlast) 
+        VALUES (:username, :groups, :charid, :charname, :corpid, :corpname, :allianceid, :alliancename, 
+                :authtoken, :now, :now);'
+    );
 }
-$stm->bindValue(':username', $username, PDO::PARAM_STR);
-$stm->bindValue(':groups', implode(',', $groups), PDO::PARAM_STR);
+$stm->bindValue(':username', $username);
+$stm->bindValue(':groups', implode(',', $groups));
 $stm->bindValue(':charid', $charid, PDO::PARAM_INT);
-$stm->bindValue(':charname', $charname, PDO::PARAM_STR);
+$stm->bindValue(':charname', $charname);
 $stm->bindValue(':corpid', $corpid, PDO::PARAM_INT);
-$stm->bindValue(':corpname', $corpname, PDO::PARAM_STR);
+$stm->bindValue(':corpname', $corpname);
 $stm->bindValue(':allianceid', $allianceid, PDO::PARAM_INT);
-$stm->bindValue(':alliancename', $alliancename, PDO::PARAM_STR);
-$stm->bindValue(':authtoken', $token, PDO::PARAM_STR);
+$stm->bindValue(':alliancename', $alliancename);
+$stm->bindValue(':authtoken', $token);
 $stm->bindValue(':now', time(), PDO::PARAM_INT);
-if (!$stm->execute()) { raiseError('user insert or update failed'); };
+if (!$stm->execute()) {
+    error_log('user insert or update failed');
+    exit;
+}
 
 $stm = $db->prepare('DELETE from session where sessionid = :sessionid;');
 $stm->bindValue(':sessionid', $session->getId());
-if (!$stm->execute()) { raiseError('session cleanup failed'); };
+if (!$stm->execute()) {
+    error_log('session cleanup failed');
+    exit;
+}
 
 $stm = $db->prepare('INSERT INTO session (sessionid, charid, created) VALUES (:sessionid, :charid, :created)');
 $stm->bindValue(':sessionid', $session->getId());
 $stm->bindValue(':charid', $charid);
 $stm->bindValue(':created', time());
-if (!$stm->execute()) { raiseError('session insert failed'); };
+if (!$stm->execute()) {
+    error_log('session insert failed');
+    exit;
+}
 
 // -----------------------------------------------
 

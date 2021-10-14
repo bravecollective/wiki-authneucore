@@ -1,11 +1,10 @@
 <?php
+
 namespace Brave\CoreConnector;
 
+use Pimple\Container;
 use Psr\Container\ContainerInterface;
 
-/**
- *
- */
 class Bootstrap
 {
     /**
@@ -18,9 +17,7 @@ class Bootstrap
      */
     public function __construct()
     {
-        $container = new \Pimple\Psr11\Container(new \Pimple\Container(require_once(ROOT_DIR . '/config/container.php')));
-        $this->container = $container;
-
+        $this->container = new \Pimple\Psr11\Container(new Container(include(ROOT_DIR . '/config/container.php')));
     }
 
     /**

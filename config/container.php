@@ -1,13 +1,20 @@
 <?php
 
+use Aura\Session\Session;
+use Aura\Session\SessionFactory;
+use Brave\NeucoreApi\Api\ApplicationApi;
+use Brave\NeucoreApi\Configuration;
+use Brave\Sso\Basics\AuthenticationProvider;
+use League\OAuth2\Client\Provider\GenericProvider;
+use Pimple\Container;
+
 return [
     'settings' => require_once('config.php'),
 
-    \League\OAuth2\Client\Provider\GenericProvider::class => function (\Pimple\Container $container)
-    {
+    GenericProvider::class => function (Container $container) {
         $settings = $container['settings'];
 
-        return new \League\OAuth2\Client\Provider\GenericProvider([
+        return new GenericProvider([
             'clientId' => $settings['SSO_CLIENT_ID'],
             'clientSecret' => $settings['SSO_CLIENT_SECRET'],
             'redirectUri' => $settings['SSO_REDIRECTURI'],
@@ -17,36 +24,33 @@ return [
         ]);
     },
 
-    \Brave\Sso\Basics\AuthenticationProvider::class => function (\Pimple\Container $container)
-    {
+    AuthenticationProvider::class => function (Container $container) {
         $settings = $container['settings'];
 
-        return new \Brave\Sso\Basics\AuthenticationProvider(
-            $container[\League\OAuth2\Client\Provider\GenericProvider::class],
+        return new AuthenticationProvider(
+            $container[GenericProvider::class],
             explode(' ', $settings['SSO_SCOPES'])
         );
     },
 
-    \Brave\NeucoreApi\Api\ApplicationApi::class => function (\Pimple\Container $container)
-    {
+    ApplicationApi::class => function (Container $container) {
         $settings = $container['settings'];
-        $configuration = new \Brave\NeucoreApi\Configuration();
+        $configuration = new Configuration();
         $token = base64_encode($settings['CORE_APP_ID'] . ':' . $settings['CORE_APP_TOKEN']);
         $configuration = $configuration
             ->setHost($settings['CORE_URL'].'/api')
             ->setApiKey('Authorization', $token)
             ->setApiKeyPrefix('Authorization', 'Bearer');
-        return new \Brave\NeucoreApi\Api\ApplicationApi(null, $configuration, null);
+        return new ApplicationApi(null, $configuration, null);
     },
 
-    PDO::class => function (\Pimple\Container $container) {
+    PDO::class => function (Container $container) {
         $settings = $container['settings'];
-        return new \PDO($settings['DB_URL']);
+        return new PDO($settings['DB_URL']);
     },
 
-    \Aura\Session\Session::class => function (\Pimple\Container $container)
-    {
-        $session_factory = new \Aura\Session\SessionFactory;
+    Session::class => function (){
+        $session_factory = new SessionFactory;
         $session = $session_factory->newInstance($_COOKIE);
         $session->setName('authneucore');
         return $session;

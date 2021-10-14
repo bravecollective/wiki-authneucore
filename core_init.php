@@ -1,16 +1,26 @@
 <?php
+
+use Aura\Session\Session;
+use Brave\CoreConnector\Bootstrap;
+use Brave\Sso\Basics\AuthenticationProvider;
+
 require 'vendor/autoload.php';
-define('ROOT_DIR', __DIR__);
+const ROOT_DIR = __DIR__;
 
-$bootstrap = new \Brave\CoreConnector\Bootstrap();
-/** @var \Brave\Sso\Basics\AuthenticationProvider $authenticationProvider */
-$authenticationProvider = $bootstrap->getContainer()->get(\Brave\Sso\Basics\AuthenticationProvider::class);
+$bootstrap = new Bootstrap();
+/** @var AuthenticationProvider $authenticationProvider */
+$authenticationProvider = $bootstrap->getContainer()->get(AuthenticationProvider::class);
 
-$cb = isset($_GET['cb']) ? $_GET['cb'] : '';
+$cb = $_GET['cb'] ?? '';
 
-/** @var \Aura\Session\Session $session */
-$session = $bootstrap->getContainer()->get(\Aura\Session\Session::class);
-$state = $authenticationProvider->generateState('wiki');
+/** @var Session $session */
+$session = $bootstrap->getContainer()->get(Session::class);
+try {
+    $state = $authenticationProvider->generateState('wiki');
+} catch (Exception $e) {
+    error_log($e->getMessage());
+    exit();
+}
 $session->getSegment('Bravecollective_Neucore')->set('sso_state', $state);
 $session->getSegment('Bravecollective_Neucore')->set('cb', $cb);
 

@@ -13,11 +13,10 @@ class action_plugin_authneucore extends DokuWiki_Action_Plugin
      * Disable the login forma and instead use a link to trigger login
      *
      * @param Doku_Event $event
-     * @param $param
+     * @noinspection PhpUnused
      */
-    public function handle_loginform(Doku_Event $event, $param)
+    public function handle_loginform(Doku_Event $event)
     {
-        global $ID;
         global $conf;
         if ($conf['authtype'] != 'authneucore') {
 		    return;
@@ -25,8 +24,8 @@ class action_plugin_authneucore extends DokuWiki_Action_Plugin
 
         $config = include __DIR__ . '/config/config.php';
 
-        $loginButtonUrl = 'https://raw.githubusercontent.com/bravecollective/web-ui/master/dist/images/EVE_SSO_Login_Buttons_Large_Black.png';
-        $button = '<button type="submit"><img src="'.$loginButtonUrl.'" /></button>';
+        $loginButtonUrl = '/lib/plugins/authneucore/images/EVE_SSO_Login_Buttons_Large_Black.png';
+        $button = '<button type="submit"><img src="'.$loginButtonUrl.'" alt=""/></button>';
 
         $pos = $event->data->findElementByAttribute('type', 'submit');
 
@@ -35,7 +34,7 @@ class action_plugin_authneucore extends DokuWiki_Action_Plugin
         $event->data = new Doku_Form(array());
         $event->data->addElement(
             '<a href="'.$config['wiki.baseUrl'].'lib/plugins/authneucore/core_init.php?cb=' .
-            ltrim($_SERVER['REQUEST_URI'], '/') . '"><img src="'.$loginButtonUrl.'"></a>'
+            ltrim($_SERVER['REQUEST_URI'], '/') . '"><img src="'.$loginButtonUrl.'" alt=""></a>'
         );
     }
 }
