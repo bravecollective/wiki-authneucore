@@ -28,7 +28,7 @@ $state = $_GET['state'];
 /** @var AuthenticationProvider $authenticationProvider */
 $authenticationProvider = $bootstrap->getContainer()->get(AuthenticationProvider::class);
 try {
-    $eveAuthentication = $authenticationProvider->validateAuthentication($state, $sessionState, $code);
+    $eveAuthentication = $authenticationProvider->validateAuthenticationV2($state, $sessionState, $code);
 } catch(UnexpectedValueException $uve) {
     echo $uve->getMessage(), '<br>',
         '<a href="/">Please try again.</a>';

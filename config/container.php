@@ -20,7 +20,7 @@ return [
             'redirectUri' => $settings['SSO_REDIRECTURI'],
             'urlAuthorize' => $settings['SSO_URL_AUTHORIZE'],
             'urlAccessToken' => $settings['SSO_URL_ACCESSTOKEN'],
-            'urlResourceOwnerDetails' => $settings['SSO_URL_RESOURCEOWNERDETAILS'],
+            'urlResourceOwnerDetails' => '', // this was only used for SSO v1
         ]);
     },
 
@@ -29,7 +29,8 @@ return [
 
         return new AuthenticationProvider(
             $container[GenericProvider::class],
-            explode(' ', $settings['SSO_SCOPES'])
+            explode(' ', $settings['SSO_SCOPES']),
+            $settings['SSO_URL_JWKS'] ?? null
         );
     },
 
