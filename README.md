@@ -6,7 +6,7 @@ DokuWiki [Neucore](https://github.com/bravecollective/neucore) auth plugin.
 
 ```
 cd /path/to/lib/plugins
-git clone https://github.com/bravecollective/authneucore.git
+git clone https://github.com/bravecollective/wiki-authneucore.git authneucore
 cd authneucore
 composer install
 cp config/config.dist.php config/config.php
