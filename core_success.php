@@ -17,8 +17,8 @@ $sessionState = $session->getSegment('Bravecollective_Neucore')->get('sso_state'
 
 $helper = new Helper();
 
-if (!isset($_GET['code']) || !isset($_GET['state'])) {
-    echo 'Invalid SSO state, please try again.';
+if (!isset($_GET['code']) || !isset($_GET['state']) || empty($sessionState)) {
+    echo 'Invalid SSO state, <a href="/start?do=login">please try again</a>.';
     exit;
 }
 
@@ -31,7 +31,7 @@ try {
     $eveAuthentication = $authenticationProvider->validateAuthenticationV2($state, $sessionState, $code);
 } catch(UnexpectedValueException $uve) {
     echo $uve->getMessage(), '<br>',
-        '<a href="/">Please try again.</a>';
+        '<a href="/start?do=login">Please try again</a>.';
     exit;
 }
 
@@ -57,7 +57,7 @@ $alliancename = '';
 
 $tags = $helper->getCoreGroups($groupApi, $eveAuthentication);
 if (count($tags) === 0) {
-    echo '<strong>No groups found for this character or alliance.</strong><br><br>',
+    echo '<strong>No groups found for this character or corporation.</strong><br><br>',
         'Please register at <a href="'.$bootstrap->getContainer()->get('settings')['CORE_URL'].'">BRAVE Core</a>. ',
         'If the member group is listed on the right, try again here.<br><br>' .
         '<a href="/start?do=login">Back to Login</a>';
@@ -100,6 +100,7 @@ $stm = $db->prepare('SELECT charid FROM user WHERE charid = :charid;');
 $stm->bindValue(':charid', $charid);
 if (!$stm->execute()) {
     error_log('user query failed');
+    echo 'An error occurred, <a href="/start?do=login">please try again</a>.';
     exit;
 }
 
@@ -132,6 +133,7 @@ $stm->bindValue(':authtoken', $token);
 $stm->bindValue(':now', time(), PDO::PARAM_INT);
 if (!$stm->execute()) {
     error_log('user insert or update failed');
+    echo 'An error occurred, <a href="/start?do=login">please try again</a>.';
     exit;
 }
 
@@ -139,6 +141,7 @@ $stm = $db->prepare('DELETE from session where sessionid = :sessionid;');
 $stm->bindValue(':sessionid', $session->getId());
 if (!$stm->execute()) {
     error_log('session cleanup failed');
+    echo 'An error occurred, <a href="/start?do=login">please try again</a>.';
     exit;
 }
 
@@ -148,6 +151,7 @@ $stm->bindValue(':charid', $charid);
 $stm->bindValue(':created', time());
 if (!$stm->execute()) {
     error_log('session insert failed');
+    echo 'An error occurred, <a href="/start?do=login">please try again</a>.';
     exit;
 }
 
