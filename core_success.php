@@ -15,7 +15,7 @@ $bootstrap = new Bootstrap();
 $session = $bootstrap->getContainer()->get(Session::class);
 $sessionState = $session->getSegment('Bravecollective_Neucore')->get('sso_state');
 
-$helper = new Helper();
+$helper = new Helper($bootstrap->getContainer()->get('settings')['ESI_DOMAIN']);
 
 if (!isset($_GET['code']) || !isset($_GET['state']) || empty($sessionState)) {
     echo 'Invalid SSO state, <a href="/start?do=login">please try again</a>.';

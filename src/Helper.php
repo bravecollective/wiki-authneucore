@@ -11,6 +11,16 @@ use stdClass;
 
 class Helper
 {
+    /**
+     * @var string
+     */
+    private $esiDomain;
+
+    public function __construct(string $esiDomain)
+    {
+        $this->esiDomain = $esiDomain;
+    }
+
     public function getCoreGroups(ApplicationGroupsApi $groupApi, EveAuthentication $eveAuthentication): array
     {
         $charId = $eveAuthentication->getCharacterId();
@@ -26,7 +36,7 @@ class Helper
 
         // try alliance groups
         if (count($coreGroups) === 0) {
-            $esiResult = file_get_contents('https://esi.evetech.net/latest/characters/' . $charId);
+            $esiResult = file_get_contents("$this->esiDomain/latest/characters/$charId");
             $charData = json_decode($esiResult);
             if ($charData instanceof stdClass) {
                 try {

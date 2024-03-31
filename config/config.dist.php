@@ -10,6 +10,9 @@ return [
     'SSO_URL_JWKS' => 'https://login.eveonline.com/oauth/jwks',
     'SSO_SCOPES' => '',
 
+    // ESI
+    'ESI_DOMAIN' => 'https://esi.evetech.net',
+
     // App
     'brave.serviceName' => 'Add your service name here',
     'wiki.baseUrl' => 'https://wiki.bravecollective.com/',
