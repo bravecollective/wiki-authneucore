@@ -10,11 +10,13 @@
 // must be run within Dokuwiki
 use Brave\CoreConnector\Bootstrap;
 
+use dokuwiki\Extension\AuthPlugin;
+
 if (!defined('DOKU_INC')) {
     die();
 }
 
-class auth_plugin_authneucore extends DokuWiki_Auth_Plugin
+class auth_plugin_authneucore extends AuthPlugin
 {
     private $db;
 
