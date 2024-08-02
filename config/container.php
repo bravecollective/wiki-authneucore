@@ -5,32 +5,27 @@ use Aura\Session\SessionFactory;
 use Brave\NeucoreApi\Api\ApplicationGroupsApi;
 use Brave\NeucoreApi\Configuration;
 use Eve\Sso\AuthenticationProvider;
-use League\OAuth2\Client\Provider\GenericProvider;
 use Pimple\Container;
 
 return [
     'settings' => require_once('config.php'),
 
-    GenericProvider::class => function (Container $container) {
-        $settings = $container['settings'];
-
-        return new GenericProvider([
-            'clientId' => $settings['SSO_CLIENT_ID'],
-            'clientSecret' => $settings['SSO_CLIENT_SECRET'],
-            'redirectUri' => $settings['SSO_REDIRECTURI'],
-            'urlAuthorize' => $settings['SSO_URL_AUTHORIZE'],
-            'urlAccessToken' => $settings['SSO_URL_ACCESSTOKEN'],
-            'urlResourceOwnerDetails' => '', // this was only used for SSO v1
-        ]);
-    },
-
     AuthenticationProvider::class => function (Container $container) {
         $settings = $container['settings'];
 
         return new AuthenticationProvider(
-            $container[GenericProvider::class],
+            [
+                'clientId'       => $settings['SSO_CLIENT_ID'],
+                'clientSecret'   => $settings['SSO_CLIENT_SECRET'],
+                'redirectUri'    => $settings['SSO_REDIRECTURI'],
+                'urlAuthorize'   => $settings['SSO_URL_AUTHORIZE'],
+                'urlAccessToken' => $settings['SSO_URL_ACCESSTOKEN'],
+                'urlRevoke'      => 'https://login.eveonline.com/v2/oauth/revoke',
+                'urlKeySet'      => $settings['SSO_URL_JWKS'],
+                'issuer'         => 'https://login.eveonline.com',
+                'urlMetadata' => 'https://login.eveonline.com/.well-known/oauth-authorization-server',
+            ],
             explode(' ', $settings['SSO_SCOPES']),
-            $settings['SSO_URL_JWKS'] ?? null
         );
     },
 
