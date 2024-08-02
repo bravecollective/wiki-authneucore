@@ -6,17 +6,17 @@
         }
     },
     "require": {
-        "php": "^7.2",
+        "php": "^8.1",
         "ext-PDO": "*",
         "ext-json": "*",
-        "aura/session": "^2.1",
-        "bravecollective/neucore-api": "^1.23",
-        "pimple/pimple": "3.2.*",
-        "tkhamez/eve-sso": "^1.0"
+        "aura/session": "^4.0",
+        "bravecollective/neucore-api": "^2.4",
+        "pimple/pimple": "^3.5",
+        "tkhamez/eve-sso": "^5.1"
     },
     "config": {
         "platform": {
-            "php": "7.2.0"
+            "php": "8.1.0"
         },
         "sort-packages": true
     }
