@@ -7,23 +7,16 @@ use Psr\Container\ContainerInterface;
 
 class Bootstrap
 {
-    /**
-     * @var ContainerInterface
-     */
-    protected $container;
+    protected ContainerInterface $container;
 
-    /**
-     * Bootstrap constructor
-     */
     public function __construct()
     {
-        $this->container = new \Pimple\Psr11\Container(new Container(include(ROOT_DIR . '/config/container.php')));
+        $this->container = new \Pimple\Psr11\Container(
+            new Container(include(ROOT_DIR . '/config/container.php'))
+        );
     }
 
-    /**
-     * @return ContainerInterface
-     */
-    public function getContainer()
+    public function getContainer(): ContainerInterface
     {
         return $this->container;
     }

@@ -5,17 +5,29 @@ use Brave\CoreConnector\Bootstrap;
 use Brave\CoreConnector\Helper;
 use Brave\NeucoreApi\Api\ApplicationGroupsApi;
 use Eve\Sso\AuthenticationProvider;
+use Psr\Container\ContainerExceptionInterface;
 
 require 'vendor/autoload.php';
 const ROOT_DIR = __DIR__;
 
 $bootstrap = new Bootstrap();
+try {
+    $settings = $bootstrap->getContainer()->get('settings');
+} catch (ContainerExceptionInterface $e) {
+    error_log($e->getMessage());
+    die('Error 500.');
+}
 
 /** @var Session $session */
-$session = $bootstrap->getContainer()->get(Session::class);
+try {
+    $session = $bootstrap->getContainer()->get(Session::class);
+} catch (ContainerExceptionInterface $e) {
+    error_log($e->getMessage());
+    die('Error 500.');
+}
 $sessionState = $session->getSegment('Bravecollective_Neucore')->get('sso_state');
 
-$helper = new Helper($bootstrap->getContainer()->get('settings')['ESI_DOMAIN']);
+$helper = new Helper($settings['ESI_DOMAIN']);
 
 if (!isset($_GET['code']) || !isset($_GET['state']) || empty($sessionState)) {
     echo 'Invalid SSO state, <a href="/start?do=login">please try again</a>.';
@@ -26,7 +38,12 @@ $code = $_GET['code'];
 $state = $_GET['state'];
 
 /** @var AuthenticationProvider $authenticationProvider */
-$authenticationProvider = $bootstrap->getContainer()->get(AuthenticationProvider::class);
+try {
+    $authenticationProvider = $bootstrap->getContainer()->get(AuthenticationProvider::class);
+} catch (ContainerExceptionInterface $e) {
+    error_log($e->getMessage());
+    die('Error 500.');
+}
 try {
     $eveAuthentication = $authenticationProvider->validateAuthenticationV2($state, $sessionState, $code);
 } catch(UnexpectedValueException $uve) {
@@ -38,7 +55,12 @@ try {
 $session->getSegment('Bravecollective_Neucore')->set('eveAuth', $eveAuthentication);
 
 /** @var ApplicationGroupsApi $groupApi */
-$groupApi = $bootstrap->getContainer()->get(ApplicationGroupsApi::class);
+try {
+    $groupApi = $bootstrap->getContainer()->get(ApplicationGroupsApi::class);
+} catch (ContainerExceptionInterface $e) {
+    error_log($e->getMessage());
+    die('Error 500.');
+}
 
 // -----------------------------------------------
 
@@ -58,7 +80,7 @@ $alliancename = '';
 $tags = $helper->getCoreGroups($groupApi, $eveAuthentication);
 if (count($tags) === 0) {
     echo '<strong>No groups found for this character or corporation.</strong><br><br>',
-        'Please register at <a href="'.$bootstrap->getContainer()->get('settings')['CORE_URL'].'">BRAVE Core</a>. ',
+        'Please register at <a href="'.$settings['CORE_URL'].'">BRAVE Core</a>. ',
         'If the member group is listed on the right, try again here.<br><br>' .
         '<a href="/start?do=login">Back to Login</a>';
     exit;
@@ -67,7 +89,12 @@ if (count($tags) === 0) {
 // -----------------------------------------------
 
 /** @var $db PDO */
-$db = $bootstrap->getContainer()->get(PDO::class);
+try {
+    $db = $bootstrap->getContainer()->get(PDO::class);
+} catch (ContainerExceptionInterface $e) {
+    error_log($e->getMessage());
+    die('Error 500.');
+}
 
 // -----------------------------------------------
 
@@ -82,8 +109,7 @@ $groups = array_unique($groups);
 
 // -----------------------------------------------
 
-$banned = false;
-$banned = $helper->addBan($db, $banned, 'charid_' . $charid);
+$banned = $helper->addBan($db, false, 'charid_' . $charid);
 //$banned = addBan($db, $banned, 'corpid_' . $corpid);
 //$banned = addBan($db, $banned, 'allianceid_' . $allianceid);
 foreach ($tags as $tkey => $tvalue) {

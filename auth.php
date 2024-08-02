@@ -7,75 +7,24 @@
  * @author  Yukiko yukiko.kami.san@gmail.com
  */
 
-// must be run within Dokuwiki
 use Brave\CoreConnector\Bootstrap;
-
 use dokuwiki\Extension\AuthPlugin;
+use Psr\Container\ContainerExceptionInterface;
 
+// must be run within Dokuwiki
 if (!defined('DOKU_INC')) {
     die();
 }
 
+/** @noinspection PhpUnused */
 class auth_plugin_authneucore extends AuthPlugin
 {
-    private $db;
+    private PDO $db;
+
+    private Bootstrap $bootstrap;
 
     /**
-     * @var Bootstrap
-     */
-    private $bootstrap;
-
-    private function getSessionId()
-    {
-        // Return session ID from the previous session (from core_init.php and core_success.php).
-        return preg_replace("/[^A-Za-z0-9]/", '', $_COOKIE['authneucore'] ?? null);
-    }
-
-    private function getUser()
-    {
-        $stm = $this->db->prepare('DELETE FROM session WHERE created < :time;');
-        $stm->bindValue(':time', time() - 28800); // 8 hours
-        if (!$stm->execute()) {
-            die('cleanup session failed');
-        }
-
-        $stm = $this->db->prepare('SELECT charid FROM session WHERE sessionid = :sessionid;');
-        $stm->bindValue(':sessionid', $this->getSessionId());
-        if (!$stm->execute()) {
-            die('find session failed');
-        }
-
-        $row = $stm->fetch();
-        if (!$row) {
-            return false;
-        }
-
-        $stm = $this->db->prepare('SELECT * FROM user WHERE charid = :charid;');
-        $stm->bindValue(':charid', $row['charid']);
-        if (!$stm->execute()) {
-            die('find user failed');
-        }
-
-        $row = $stm->fetch();
-        if (!$row) {
-            return false;
-        }
-
-        // refresh session time in database
-        $stm = $this->db->prepare('UPDATE session SET created = :created WHERE sessionid = :sessionid');
-        $stm->bindValue(':created', time());
-        $stm->bindValue(':sessionid', $this->getSessionId());
-        $stm->execute();
-
-        // refresh session file time so that the Ubuntu cron job does not delete it
-        // after "session.gc_maxlifetime" seconds
-        $_SESSION[DOKU_COOKIE]['auth']['_last_access'] = time();
-
-        return $row;
-    }
-
-    /**
-     * Constructor.
+     * @throws ContainerExceptionInterface
      */
     public function __construct()
     {
@@ -106,7 +55,7 @@ class auth_plugin_authneucore extends AuthPlugin
         $this->success = true;
     }
 
-    public function logOff()
+    public function logOff(): void
     {
         $stm = $this->db->prepare('DELETE FROM session WHERE sessionid = :sessionid;');
         $stm->bindValue(':sessionid', $this->getSessionId());
@@ -157,7 +106,7 @@ class auth_plugin_authneucore extends AuthPlugin
      * @param   string $user the user name
      * @return  array|false containing user data or false
      */
-    public function getUserData($user, $requireGroups = true)
+    public function getUserData($user, $requireGroups = true): bool|array
     {
         $stm = $this->db->prepare('SELECT * FROM user WHERE username = :username;');
         $stm->bindValue(':username', $user);
@@ -180,7 +129,6 @@ class auth_plugin_authneucore extends AuthPlugin
      *
      * @param   string $user nick of the user to be changed
      * @param   array $changes array of field/value pairs to be changed (password will be clear text)
-     * @return  bool
      */
     public function modifyUser($user, $changes): bool
     {
@@ -197,8 +145,6 @@ class auth_plugin_authneucore extends AuthPlugin
      *
      * When your backend is caseinsensitive (eg. you can login with USER and
      * user) then you need to overwrite this method and return false
-     *
-     * @return bool
      */
     public function isCaseSensitive(): bool
     {
@@ -263,10 +209,59 @@ class auth_plugin_authneucore extends AuthPlugin
      * unsure, do not override.
      *
      * @param  string $user - The username
-     * @return bool
      */
     public function useSessionCache($user): bool
     {
         return false;
+    }
+
+    private function getSessionId(): string
+    {
+        // Return session ID from the previous session (from core_init.php and core_success.php).
+        // Note: session_id() does not work here.
+        return (string)preg_replace("/[^A-Za-z0-9]/", '', $_COOKIE['authneucore'] ?? null);
+    }
+
+    private function getUser()
+    {
+        $stm = $this->db->prepare('DELETE FROM session WHERE created < :time;');
+        $stm->bindValue(':time', time() - 28800); // 8 hours
+        if (!$stm->execute()) {
+            die('cleanup session failed');
+        }
+
+        $stm = $this->db->prepare('SELECT charid FROM session WHERE sessionid = :sessionid;');
+        $stm->bindValue(':sessionid', $this->getSessionId());
+        if (!$stm->execute()) {
+            die('find session failed');
+        }
+
+        $row = $stm->fetch();
+        if (!$row) {
+            return false;
+        }
+
+        $stm = $this->db->prepare('SELECT * FROM user WHERE charid = :charid;');
+        $stm->bindValue(':charid', $row['charid']);
+        if (!$stm->execute()) {
+            die('find user failed');
+        }
+
+        $row = $stm->fetch();
+        if (!$row) {
+            return false;
+        }
+
+        // refresh session time in database
+        $stm = $this->db->prepare('UPDATE session SET created = :created WHERE sessionid = :sessionid');
+        $stm->bindValue(':created', time());
+        $stm->bindValue(':sessionid', $this->getSessionId());
+        $stm->execute();
+
+        // refresh session file time so that the Ubuntu cron job does not delete it
+        // after "session.gc_maxlifetime" seconds
+        $_SESSION[DOKU_COOKIE]['auth']['_last_access'] = time();
+
+        return $row;
     }
 }

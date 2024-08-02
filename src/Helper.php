@@ -11,18 +11,17 @@ use stdClass;
 
 class Helper
 {
-    /**
-     * @var string
-     */
-    private $esiDomain;
+    private string $esiDomain;
 
     public function __construct(string $esiDomain)
     {
         $this->esiDomain = $esiDomain;
     }
 
-    public function getCoreGroups(ApplicationGroupsApi $groupApi, EveAuthentication $eveAuthentication): array
-    {
+    public function getCoreGroups(
+        ApplicationGroupsApi $groupApi,
+        EveAuthentication $eveAuthentication,
+    ): array {
         $charId = $eveAuthentication->getCharacterId();
 
         // try player account
