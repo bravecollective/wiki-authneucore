@@ -28,7 +28,7 @@ class auth_plugin_authneucore extends AuthPlugin
     private function getSessionId()
     {
         // Return session ID from the previous session (from core_init.php and core_success.php).
-        return preg_replace("/[^A-Za-z0-9]/", '', $_COOKIE['authneucore']);
+        return preg_replace("/[^A-Za-z0-9]/", '', $_COOKIE['authneucore'] ?? null);
     }
 
     private function getUser()
@@ -170,7 +170,7 @@ class auth_plugin_authneucore extends AuthPlugin
             return false;
         }
 
-        return ['name' => $row['charname'], 'email' => $row['mail'], 'grps' => explode(',', $row['grp'])];
+        return ['name' => $row['charname'], 'email' => $row['mail'], 'grps' => []];
     }
 
     /**
